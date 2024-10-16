@@ -5,8 +5,9 @@
 #include <Adafruit_GFX.h>
 
 // peripheral constants
-#define LED_PIN 2
+#define LED_PIN 2   // built-in LED
 #define SERVO_PIN 27
+#define PHOTO_RESISTER 25
 
 // LCD constants
 #define LCD_CS 15
@@ -33,6 +34,7 @@ void setup() {
   initServo();
   initLcd();
   initLED();
+  pinMode(PHOTO_RESISTER, INPUT);
 }
 
 void initLED()
@@ -44,6 +46,8 @@ void loop() {
   // put your main code here, to run repeatedly:
   // servo.write(50);
   Serial.println("All OK");
+  uint16_t photoResistance = analogRead(PHOTO_RESISTER);
+  Serial.println(photoResistance);
   showLogo();
   digitalWrite(LED_PIN, HIGH);
   delay(1000);
