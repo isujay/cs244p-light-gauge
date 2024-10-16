@@ -4,30 +4,56 @@
 #include <Adafruit_ST7789.h>
 #include <Adafruit_GFX.h>
 
-#define SERVO_PORT 27
+// peripheral constants
+#define LED_PIN 2
+#define SERVO_PIN 27
 
+// LCD constants
 #define LCD_CS 15
 #define LCD_DC 2
 #define LCD_RST 4
 
+// peripheral objects
 Adafruit_ST7789 lcd = Adafruit_ST7789(LCD_CS, LCD_DC, LCD_RST);
+Servo servo;
+
+// state variables
+ uint16_t minPhotoResistence;
+ uint16_t maxPhotoResistence;
 
 // put function declarations here:
 int myFunction(int, int);
+void initDataBus();
+void initServo();
+void hideLogo();
 
-Servo servo;
 
 void setup() {
-  // servo.attach(SERVO_PORT);
-  Serial.begin(9600);
-  lcd.init(135, 240);
-  lcd.fillScreen(ST77XX_BLACK);
+  initDataBus();
+  initServo();
+  initLcd();
+  initLED();
+}
+
+void initLED()
+{
+  pinMode(LED_BUILTIN, OUTPUT);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
   // servo.write(50);
-  Serial.println("Hello Sujay Hegde");
+  Serial.println("All OK");
+  showLogo();
+  digitalWrite(LED_PIN, HIGH);
+  delay(1000);
+  hideLogo();
+  digitalWrite(LED_PIN, LOW);
+  sleep(1);
+}
+
+void showLogo()
+{
   lcd.setCursor(0, 0);
   lcd.setTextColor(5000);
   lcd.setTextSize(3);
@@ -35,9 +61,26 @@ void loop() {
   lcd.println("Tech");
   lcd.println("STUDIOS");
   lcd.drawCircle(3, 3, 100, 134);
-  sleep(3);
-  lcd.fillScreen(ST7735_BLACK);
-  sleep(2);
+}
+
+void hideLogo() {
+    lcd.fillScreen(ST7735_BLACK);
+}
+
+void initServo()
+{
+  servo.attach(SERVO_PIN);
+}
+
+void initDataBus()
+{
+  Serial.begin(9600);
+}
+
+void initLcd()
+{
+  lcd.init(135, 240);
+  lcd.fillScreen(ST77XX_BLACK);
 }
 
 // put function definitions here:
