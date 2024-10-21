@@ -5,9 +5,11 @@
 #include <Adafruit_GFX.h>
 
 // peripheral constants
-#define LED_PIN 2   // built-in LED
+#define LED_PIN 13   
 #define SERVO_PIN 27
 #define PHOTO_RESISTER 25
+#define MIN_SERVO_ROTATION 0
+#define MAX_SERVO_ROTATION 180
 
 // LCD constants
 #define LCD_CS 15
@@ -19,40 +21,65 @@ Adafruit_ST7789 lcd = Adafruit_ST7789(LCD_CS, LCD_DC, LCD_RST);
 Servo servo;
 
 // state variables
- uint16_t minPhotoResistence;
- uint16_t maxPhotoResistence;
+ uint16_t minPhotoResistenc = std::numeric_limits<uint16_t>::max();
+ uint16_t maxPhotoResistence = std::numeric_limits<uint16_t>::min();
 
 // put function declarations here:
 int myFunction(int, int);
 void initDataBus();
 void initServo();
 void hideLogo();
-
+void calibratePhotoResister();
 
 void setup() {
   initDataBus();
   initServo();
   initLcd();
   initLED();
+  calibratePhotoResister();
+}
+
+void calibratePhotoResister() {
+  Serial.println("Attention! Calibration started. Go, go, go!");
   pinMode(PHOTO_RESISTER, INPUT);
+  int startTime = millis();
+  int endTime = startTime + 10000;
+  for (int time = millis(); time < endTime; time = millis()) {
+    Serial.println("Calibrating...");
+    uint16_t photoResistance = analogRead(PHOTO_RESISTER);
+    if (photoResistance > maxPhotoResistence) {
+      maxPhotoResistence = photoResistance;
+    }
+    if (photoResistance < minPhotoResistenc) {
+      minPhotoResistenc = photoResistance;
+    }
+    digitalWrite(LED_PIN, LOW);
+    delay(500);
+    digitalWrite(LED_PIN, HIGH);
+    delay(500);
+  }
+  Serial.printf("Photo Resistor calibration complete. Min photoResistance=%d, Max photoResistence=%d\n", minPhotoResistenc, maxPhotoResistence);
+  digitalWrite(LED_PIN, HIGH);
 }
 
 void initLED()
 {
-  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  // servo.write(50);
-  Serial.println("All OK");
+
   uint16_t photoResistance = analogRead(PHOTO_RESISTER);
-  Serial.println(photoResistance);
+  Serial.printf("Photo resistance = %d\n", photoResistance);
+  float photoResistancePercentage = ((float)(photoResistance - minPhotoResistenc)) / (maxPhotoResistence - minPhotoResistenc);
+  int servoPosition = (photoResistancePercentage * (MAX_SERVO_ROTATION - MIN_SERVO_ROTATION)) + MIN_SERVO_ROTATION;
+  Serial.printf("Servo rotation = %d\n", servoPosition);
+  servo.write(servoPosition);
+
   showLogo();
-  digitalWrite(LED_PIN, HIGH);
   delay(1000);
   hideLogo();
-  digitalWrite(LED_PIN, LOW);
   sleep(1);
 }
 
